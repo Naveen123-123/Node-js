@@ -1,6 +1,7 @@
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
+const slugify = require("slugify");
 const replacePlaceholder = require("./starter/modules/replaceTemplate")
 // Blocking, synchronous way
 // Reading from the file
@@ -37,6 +38,10 @@ const replacePlaceholder = require("./starter/modules/replaceTemplate")
 // Reading Data
 const data = fs.readFileSync(`./starter/dev-data/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
+
+// To provide a meaningful unique names
+const slugs = dataObj.map((item)=>slugify(item.productName,{lower:true}));
+console.log(slugs);
 const tempOverview = fs.readFileSync(
   `./starter/templates/overview.html`,
   "utf-8",
