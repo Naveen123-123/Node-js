@@ -1,5 +1,6 @@
 const fs = require("fs");
 const http = require("http");
+const url = require('url');
 // Blocking, synchronous way
 // Reading from the file
 // FileSystem
@@ -40,8 +41,10 @@ const replacePlaceholder = (tempCard, product) => {
   output = output.replace(/{%DESCRIPTION%}/g, product.description);
   output = output.replace(/{%FROM%}/g, product.from);
   output = output.replace(/{%IMAGE%}/g, product.image);
-  output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
-  if (!product.organic) output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
+  output = output.replace(/{%NEUTRIENTS%}/g, product.nutrients);
+  output = output.replace(/{%ID%}/g, product.id);
+  if (!product.organic)
+    output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
   return output;
 };
 
@@ -60,25 +63,31 @@ const tempCard = fs.readFileSync(`./starter/templates/card.html`, "utf-8");
 
 // Server
 const server = http.createServer((req, res) => {
-  const pathName = req.url;
+  const { query, pathname } = url.parse(req.url,true);
+  console.log(query,pathname);
   // Overview Page
-  if (pathName === "/" || pathName === "/overview") {
+  if (pathname === "/" || pathname === "/overview") {
     const cardsHtml = dataObj
       .map((el) => replacePlaceholder(tempCard, el))
       .join("");
     const output = tempOverview.replace("{%PRODUCTS_CARDS%}", cardsHtml);
     res.writeHead(200, {
-       "Content-Type": "text/html",
+      "Content-Type": "text/html",
     });
     res.end(output);
   }
   // Product Page
-  else if (pathName === "/product") {
-    res.end("This is the product");
+  else if (pathname === "/product") {
+    const product = dataObj[query.id];
+    const output = replacePlaceholder(tempProduct, product) || "This is product";
+    res.writeHead(200, {
+      "Content-Type": "text/html",
+    });
+    res.end(output);
   }
 
   // API Page
-  else if (pathName === "/api") {
+  else if (pathname === "/api") {
     res.writeHead(200, {
       "Content-Type": "application/json",
     });
